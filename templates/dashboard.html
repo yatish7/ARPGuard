@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ARPGuard - Network Spoofing Alerts</title>
+    <meta http-equiv="refresh" content="5"> <!-- auto-refresh every 5 sec -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 40px;
+        }
+        h1 {
+            color: #111827;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+        th, td {
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            text-align: left;
+        }
+        th {
+            background-color: #111827;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #e5e7eb;
+        }
+        .tag {
+            background-color: #f87171;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚠️ ARP Spoofing Alerts Dashboard</h1>
+
+    {% if alerts %}
+        <table>
+            <tr>
+                <th>⏰ Timestamp</th>
+                <th>🔗 Spoofed MAC</th>
+                <th>📡 Conflicting IPs</th>
+                <th>🚨 Status</th>
+            </tr>
+            {% for alert in alerts %}
+            <tr>
+                <td>{{ alert.timestamp }}</td>
+                <td>{{ alert.spoofed_mac }}</td>
+                <td>{{ alert.conflicting_ips | join(', ') }}</td>
+                <td><span class="tag">{{ alert.action }}</span></td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No ARP spoofing alerts detected yet.</p>
+    {% endif %}
+</body>
+</html>
