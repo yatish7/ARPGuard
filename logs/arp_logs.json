@@ -24,3 +24,7 @@
 {"timestamp": "2025-07-16 22:14:06", "spoofed_mac": "de:ad:be:ef:00:00", "conflicting_ips": ["192.168.31.99", "192.168.31.1"], "action": "logged"}
 {"timestamp": "2025-07-16 22:14:45", "spoofed_mac": "de:ad:be:ef:00:00", "conflicting_ips": ["192.168.31.99", "192.168.31.1"], "action": "logged"}
 {"timestamp": "2025-07-16 22:14:46", "spoofed_mac": "de:ad:be:ef:00:00", "conflicting_ips": ["192.168.31.99", "192.168.31.1"], "action": "logged"}
+{"timestamp": "2025-07-16 22:25:57", "spoofed_mac": "de:ad:be:ef:00:00", "conflicting_ips": ["192.168.31.99", "192.168.31.1"], "action": "logged"}
+{"timestamp": "2025-07-16 22:25:58", "spoofed_mac": "de:ad:be:ef:00:00", "conflicting_ips": ["192.168.31.99", "192.168.31.1"], "action": "logged"}
+{"timestamp": "2025-07-16 22:26:40", "spoofed_mac": "de:ad:be:ef:00:00", "conflicting_ips": ["192.168.31.99", "192.168.31.1"], "action": "logged"}
+{"timestamp": "2025-07-16 22:26:41", "spoofed_mac": "de:ad:be:ef:00:00", "conflicting_ips": ["192.168.31.99", "192.168.31.1"], "action": "logged"}
