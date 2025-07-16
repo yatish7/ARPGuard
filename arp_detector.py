@@ -1,39 +1,46 @@
 from scapy.all import ARP, sniff
-from collections import defaultdict
-import json
+import requests
+from datetime import datetime
 import time
-import os
 
-mac_to_ips = defaultdict(set)
-LOG_FILE = "logs/arp_logs.json"
-os.makedirs("logs", exist_ok=True)
+ip_mac_map = {}
 
-def log_alert(mac, ips):
-    alert = {
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "spoofed_mac": mac,
-        "conflicting_ips": list(ips),
-        "action": "logged"
-    }
-    with open(LOG_FILE, "a") as f:
-        f.write(json.dumps(alert) + "\n")
-    print(f"[⚠️ ALERT] {mac} is used by multiple IPs: {ips}")
-    os.system("afplay /System/Library/Sounds/Glass.aiff")
+CLOUD_ENDPOINT = "https://arpguard.onrender.com/api/upload"  # No trailing slash
 
-def process_packet(packet):
-    if packet.haslayer(ARP) and packet[ARP].op == 2:
-        mac = packet[ARP].hwsrc
-        ip = packet[ARP].psrc
-        mac_to_ips[mac].add(ip)
-        print(f"[DEBUG] {ip} → {mac}")
-        print(f"[DEBUG] Current IPs for {mac}: {mac_to_ips[mac]}")
-        print(f"[DEBUG] Full mapping: {dict(mac_to_ips)}")
-        if len(mac_to_ips[mac]) > 1:
-            log_alert(mac, mac_to_ips[mac])
+def detect_arp_spoof(packet):
+    if packet.haslayer(ARP) and packet[ARP].op == 2:  # is-at (ARP reply)
+        real_ip = packet[ARP].psrc
+        real_mac = packet[ARP].hwsrc
 
-def start_sniffing():
-    print("[*] ARP Detector Running... Press Ctrl+C to stop.")
-    sniff(filter="arp", prn=process_packet, store=0)
+        print(f"[DEBUG] {real_ip} → {real_mac}")
+
+        if real_mac in ip_mac_map:
+            ip_mac_map[real_mac].add(real_ip)
+        else:
+            ip_mac_map[real_mac] = {real_ip}
+
+        print(f"[DEBUG] Current IPs for {real_mac}: {ip_mac_map[real_mac]}")
+        print(f"[DEBUG] Full mapping: {ip_mac_map}")
+
+        if len(ip_mac_map[real_mac]) > 1:
+            print(f"[⚠️ ALERT] {real_mac} is used by multiple IPs: {ip_mac_map[real_mac]}")
+
+            # Prepare alert payload
+            alert = {
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "mac": real_mac,
+                "ips": list(ip_mac_map[real_mac])
+            }
+
+            try:
+                response = requests.post(CLOUD_ENDPOINT, json=alert, timeout=5)
+                if response.status_code == 200:
+                    print("[✅] Alert uploaded successfully to cloud dashboard.")
+                else:
+                    print(f"[❌] Failed to upload alert: {response.status_code} {response.text}")
+            except Exception as e:
+                print(f"[❌] Exception during upload: {e}")
 
 if __name__ == "__main__":
-    start_sniffing()
+    print("[*] ARP Detector Running... Press Ctrl+C to stop.")
+    sniff(filter="arp", store=False, prn=detect_arp_spoof)

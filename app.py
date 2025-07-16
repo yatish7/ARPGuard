@@ -1,24 +1,47 @@
-from flask import Flask, render_template
-import json
+from flask import Flask, render_template, jsonify, request
+from flask_cors import CORS
 import os
+import json
+from datetime import datetime
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route('/')
+LOG_FILE = os.path.join("logs", "arp_logs.json")
+
+@app.route("/")
 def dashboard():
-    alerts = []
-    log_file = os.path.join("logs", "arp_logs.json")
-    
-    if os.path.exists(log_file):
-        with open(log_file, "r") as f:
-            for line in f:
-                if line.strip():
-                    try:
-                        alerts.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        continue
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            logs = json.load(f)
+    else:
+        logs = []
+    return render_template("dashboard.html", logs=logs)
 
-    return render_template("dashboard.html", alerts=alerts)
+@app.route("/api/upload", methods=["POST"])
+def upload_alert():
+    try:
+        data = request.get_json()
+        print("[DEBUG] Received data:", data)
+
+        if not all(k in data for k in ("timestamp", "mac", "ips")):
+            return jsonify({"error": "Invalid alert format"}), 400
+
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, "r") as f:
+                logs = json.load(f)
+        else:
+            logs = []
+
+        logs.append(data)
+        with open(LOG_FILE, "w") as f:
+            json.dump(logs, f, indent=2)
+
+        return jsonify({"message": "Alert uploaded successfully"}), 200
+
+    except Exception as e:
+        print("[ERROR] Upload failed:", str(e))
+        return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
